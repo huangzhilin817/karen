@@ -1,4 +1,4 @@
-提示（“OK”）local packageName = activity.getPackageName()
+local packageName = activity.getPackageName()
 if packageName ~= "com.baoming" then
     local builder = AlertDialog.Builder(activity)
     builder.setTitle("验证失败")
