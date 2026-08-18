@@ -1,7 +1,7 @@
 local packageName = activity.getPackageName()
 if packageName ~= "com.karen" then
     local builder = AlertDialog.Builder(activity)
-    builder.setTitle("验败")
+    builder.setTitle("验败失败")
     builder.setMessage("当前应用包名不正确，即将退出。")
     builder.setCancelable(false)
     builder.setPositiveButton("确定", {onClick = function()
