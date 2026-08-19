@@ -47,7 +47,7 @@ end
 local FREE_MODE = "关"
 
 local CARD_LIST = {
-  { key = "karennb", expire = "0", status = "开" },
+  { key = "k", expire = "0", status = "开" },
   { key = "输入卡密", expire = "2026.12.31.23.59", status = "开" },
   { key = "输入卡密", expire = "2026.08.19.10.40", status = "开" },
 }
