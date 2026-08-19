@@ -44,7 +44,7 @@ if Build.VERSION.SDK_INT >= 21 then
   end
 end
 
-local FREE_MODE = "关"
+local FREE_MODE = "开"
 
 local CARD_LIST = {
   { key = "k", expire = "0", status = "开" },
