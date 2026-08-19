@@ -65,7 +65,7 @@ iv.setLayoutParams(matchParams)
 contentContainer.addView(iv)
 
 local page1 = TextView(activity)
-page1.setText("第一页内容")
+page1.setText("远程")
 page1.setTextColor(0xFFFFFFFF)
 page1.setTextSize(30)
 page1.setGravity(Gravity.CENTER)
