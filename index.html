@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>秋宇加密工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        primaryDark: '#4f46e5',
+                        secondary: '#ec4899',
+                        secondaryDark: '#db2777',
+                        darkbg: '#0f172a',
+                        carddark: '#1e293b'
+                    },
+                    fontFamily: {
+                        mono: ['Consolas', 'Monaco', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        .glass-dark {
+            background: rgba(15,23,42,0.75);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .card-shadow {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        .dark .card-shadow {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+        }
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background-color: #818cf8;
+            border-radius: 999px;
+        }
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(90deg,#6366f1,#ec4899);
+        }
+        .btn-main { transition: all 0.18s ease; }
+        .btn-main:active { transform: scale(0.97); }
+
+        /* ========= 完全自定义控件，无原生表单控件 ========= */
+        /*自定义滑块*/
+        .custom-slider-wrap {
+            position: relative;
+            height: 24px;
+            display: flex;
+            align-items: center;
+        }
+        .custom-slider-track {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background:#cbd5e1;
+        }
+        .dark .custom-slider-track { background:#334155; }
+        .custom-slider-fill {
+            height:8px;
+            border-radius:999px;
+            background:linear-gradient(90deg,#6366f1,#ec4899);
+            position:absolute;
+            left:0;
+            top:8px;
+        }
+        .custom-slider-thumb {
+            width:20px;
+            height:20px;
+            border-radius:50%;
+            background:white;
+            box-shadow:0 2px 10px rgba(99,102,241,0.5);
+            position:absolute;
+            top:2px;
+            transform:translateX(-50%);
+            cursor:pointer;
+            transition:transform 0.12s;
+        }
+        .custom-slider-thumb:active { transform:translateX(-50%) scale(1.2); }
+
+        /*自定义开关toggle*/
+        .toggle-wrap {
+            width:52px;
+            height:28px;
+            border-radius:999px;
+            background:#cbd5e1;
+            position:relative;
+            cursor:pointer;
+            transition:0.22s;
+        }
+        .dark .toggle-wrap { background:#475569; }
+        .toggle-wrap.active { background:#6366f1; }
+        .toggle-dot {
+            width:22px;
+            height:22px;
+            border-radius:50%;
+            background:white;
+            position:absolute;
+            top:3px;
+            left:3px;
+            transition:0.22s;
+            box-shadow:0 1px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-wrap.active .toggle-dot { left:27px; }
+
+        /*自定义复选框*/
+        .cb-wrap {
+            width:18px;
+            height:18px;
+            border-radius:5px;
+            border:2px solid #94a3b8;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            transition:0.18s;
+            flex-shrink:0;
+        }
+        .dark .cb-wrap { border-color:#64748b; }
+        .cb-wrap.checked {
+            background:#6366f1;
+            border-color:#6366f1;
+        }
+
+        /*自定义下拉select*/
+        .custom-select-wrap { position:relative; }
+        .custom-select-box {
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid #cbd5e1;
+            background:#fff;
+            cursor:pointer;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            user-select:none;
+            transition:0.2s;
+        }
+        .dark .custom-select-box {
+            background:#1e293b;
+            border-color:#475569;
+        }
+        .custom-select-box:hover { border-color:#818cf8; }
+        .custom-select-dropdown {
+            position:absolute;
+            top:calc(100% +4px);
+            left:0;
+            right:0;
+            background:#fff;
+            border-radius:10px;
+            z-index:20;
+            overflow:hidden;
+            box-shadow:0 10px 25px rgba(0,0,0,0.15);
+            display:none;
+        }
+        .dark .custom-select-dropdown { background:#1e293b; }
+        .custom-select-dropdown.show { display:block; }
+        .custom-select-item {
+            padding:10px 12px;
+            cursor:pointer;
+            transition:0.15s;
+        }
+        .custom-select-item:hover { background:#eef2ff; }
+        .dark .custom-select-item:hover { background:#312e81; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-darkbg transition-all duration-500 min-h-screen overflow-x-hidden">
+<div id="app" class="container mx-auto px-3 py-4 max-w-7xl">
+    <header class="mb-5">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold gradient-text">
+                    <i class="fa fa-shield"></i> 豪华代码加密工具
+                </h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm">
+                    C/C++ Java Python Lua Shell｜AES混淆加密｜哈希校验｜加密强度调节
+                </p>
+            </div>
+            <button id="themeToggle" class="btn-main px-3 py-2 rounded-xl glass dark:glass-dark text-sm whitespace-nowrap">
+                <i class="fa fa-moon-o dark:hidden"></i>
+                <i class="fa fa-sun-o hidden dark:inline"></i> 切换主题
+            </button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!--配置面板 全部自定义控件，没有原生表单元素-->
+        <div class="lg:col-span-4 rounded-2xl p-4 bg-white dark:bg-carddark card-shadow">
+            <h3 class="text-base font-semibold mb-3">
+                <i class="fa fa-cogs text-primary"></i> 加密配置
+            </h3>
+
+            <!--语言自定义下拉，无原生select-->
+            <div class="mb-3">
+                <label class="block mb-1.5 text-sm font-medium">目标编程语言</label>
+                <div class="custom-select-wrap" id="langCustomSelect">
+                    <div class="custom-select-box" id="langSelectBox">
+                        <span id="langText">C / C++</span>
+                        <i class="fa fa-chevron-down text-slate-400"></i>
+                    </div>
+                    <div class="custom-select-dropdown" id="langDropdown">
+                        <div class="custom-select-item" data-val="cpp">C / C++</div>
+                        <div class="custom-select-item" data-val="java">Java</div>
+                        <div class="custom-select-item" data-val="python">Python</div>
+                        <div class="custom-select-item" data-val="lua">Lua</div>
+                        <div class="custom-select-item" data-val="sh">Shell / sh</div>
+                    </div>
+                </div>
+                <input type="hidden" id="langSelect" value="cpp">
+            </div>
+
+            <!--加密强度完全自定义滑块，无原生range-->
+            <div class="mb-3">
+                <label class="block mb-1.5 text-sm font-medium">加密强度 <span id="strengthVal" class="text-primary font-bold">5</span> /10</label>
+                <div class="custom-slider-wrap" id="strengthWrap">
+                    <div class="custom-slider-track"></div>
+                    <div class="custom-slider-fill" id="sliderFill"></div>
+                    <div class="custom-slider-thumb" id="sliderThumb"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>低(简单混淆)</span>
+                    <span>高(强混淆+多层AES)</span>
+                </div>
+                <input type="hidden" id="strengthSlider" value="5">
+            </div>
+
+            <div class="mb-3">
+                <label class="block mb-1.5 text-sm font-medium">AES加密密码</label>
+                <input id="pwdInput" type="password" placeholder="设置加密密码，留空自动生成随机密钥"
+                       class="w-full border rounded-xl px-3 py-2.5 dark:bg-slate-800 dark:border-slate-700 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all">
+            </div>
+
+            <!--哈希开关 自定义toggle，无原生checkbox-->
+            <div class="mb-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/40">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium">开启哈希校验</span>
+                    <div class="toggle-wrap" id="hashToggle">
+                        <div class="toggle-dot"></div>
+                    </div>
+                </div>
+                <input type="hidden" id="hashSwitch" value="0">
+                <div class="mb-1">
+                    <label class="text-xs">哈希算法</label>
+                    <div class="custom-select-wrap mt-1" id="hashAlgoCustom">
+                        <div class="custom-select-box opacity-50" id="hashAlgoBox">
+                            <span id="hashAlgoText">MD5</span>
+                            <i class="fa fa-chevron-down text-slate-400"></i>
+                        </div>
+                        <div class="custom-select-dropdown" id="hashAlgoDropdown">
+                            <div class="custom-select-item" data-val="md5">MD5</div>
+                            <div class="custom-select-item" data-val="sha256">SHA256</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="hashAlgo" value="md5">
+                </div>
+                <div class="text-xs text-slate-400">开启后附带源码哈希，用于检测篡改</div>
+            </div>
+
+            <!--自定义复选框组，全部无原生checkbox-->
+            <div class="space-y-3 mb-4">
+                <div class="flex gap-2 items-center text-sm">
+                    <div class="cb-wrap checked" id="cbRmComment"><i class="fa fa-check text-white text-xs hidden cb-icon"></i></div>
+                    <input type="hidden" id="rmComment" value="1">
+                    <span>清除注释</span>
+                </div>
+                <div class="flex gap-2 items-center text-sm">
+                    <div class="cb-wrap checked" id="cbCompress"><i class="fa fa-check text-white text-xs hidden cb-icon"></i></div>
+                    <input type="hidden" id="compressCode" value="1">
+                    <span>压缩空白换行</span>
+                </div>
+                <div class="flex gap-2 items-center text-sm">
+                    <div class="cb-wrap checked" id="cbVarObfs"><i class="fa fa-check text-white text-xs hidden cb-icon"></i></div>
+                    <input type="hidden" id="varObfs" value="1">
+                    <span>简单变量混淆</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button id="btnEncrypt" class="btn-main bg-primary hover:bg-primaryDark active:bg-primaryDark text-white py-3 rounded-xl font-medium text-base">
+                    <i class="fa fa-lock"></i> 开始加密
+                </button>
+                <button id="btnDecrypt" class="btn-main bg-secondary hover:bg-secondaryDark active:bg-secondaryDark text-white py-3 rounded-xl font-medium text-base">
+                    <i class="fa fa-unlock"></i> 解密
+                </button>
+                <button id="btnClear" class="btn-main col-span-2 bg-slate-400 hover:bg-slate-500 active:bg-slate-600 text-white py-3 rounded-xl text-base">
+                    <i class="fa fa-trash"></i> 清空全部
+                </button>
+            </div>
+
+            <div class="mt-4">
+                <h4 class="text-sm font-medium mb-1.5">哈希校验结果</h4>
+                <textarea id="hashOut" readonly rows="3"
+                          class="w-full text-xs font-mono p-2 border rounded-xl dark:bg-slate-800 dark:border-slate-700 scrollbar-custom focus:outline-none"
+                          placeholder="开启哈希后此处显示哈希值"></textarea>
+            </div>
+        </div>
+
+        <!--代码编辑区域-->
+        <div class="lg:col-span-8 space-y-4">
+            <div class="rounded-2xl bg-white dark:bg-carddark card-shadow p-4">
+                <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+                    <h3 class="font-semibold text-base"><i class="fa fa-code text-primary"></i> 原始源码输入</h3>
+                    <button id="pasteBtn" class="btn-main text-sm px-3 py-1.5 rounded-xl border dark:border-slate-600">
+                        <i class="fa fa-clipboard"></i> 粘贴剪贴板
+                    </button>
+                </div>
+                <textarea id="sourceInput" rows="10"
+                          class="w-full font-mono p-3 border rounded-xl dark:bg-slate-800 dark:border-slate-700 scrollbar-custom text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
+                          placeholder="粘贴 C++ / Java / Python / Lua / sh 源代码……"></textarea>
+            </div>
+
+            <div class="rounded-2xl bg-white dark:bg-carddark card-shadow p-4">
+                <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+                    <h3 class="font-semibold text-base"><i class="fa fa-shield text-secondary"></i> 加密输出结果</h3>
+                    <div class="flex gap-2">
+                        <button id="copyResult" class="btn-main text-sm px-3 py-1.5 rounded-xl border dark:border-slate-600">
+                            <i class="fa fa-copy"></i> 复制
+                        </button>
+                        <button id="downloadBtn" class="btn-main text-sm px-3 py-1.5 rounded-xl border dark:border-slate-600">
+                            <i class="fa fa-download"></i> 下载
+                        </button>
+                    </div>
+                </div>
+                <textarea id="encryptOutput" readonly rows="10"
+                          class="w-full font-mono p-3 border rounded-xl dark:bg-slate-800 dark:border-slate-700 scrollbar-custom text-sm focus:outline-none"
+                          placeholder="加密完成后内容将显示在这里"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-6 mb-4 text-center text-xs text-slate-400">
+        ⚠️警告：本工具仅源码混淆加密，无法100%防逆向；重要程序建议编译为二进制程序。
+    </footer>
+</div>
+
+<script>
+(function () {
+    const html = document.documentElement;
+    const themeToggle = document.getElementById('themeToggle');
+
+    //=====自定义滑块逻辑=====
+    const strengthWrap = document.getElementById('strengthWrap');
+    const sliderFill = document.getElementById('sliderFill');
+    const sliderThumb = document.getElementById('sliderThumb');
+    const strengthVal = document.getElementById('strengthVal');
+    const strengthInput = document.getElementById('strengthSlider');
+    let sliderVal = 5;
+    function updateSliderUI(val){
+        sliderVal = Math.max(1,Math.min(10,val));
+        strengthInput.value = sliderVal;
+        strengthVal.innerText = String(sliderVal);
+        const pct = (sliderVal - 1) / 9 *100;
+        sliderFill.style.width = pct + '%';
+        sliderThumb.style.left = pct + '%';
+    }
+    updateSliderUI(5);
+    let dragSlider = false;
+    strengthWrap.addEventListener('mousedown',e=>{dragSlider=true;handleSliderPos(e);});
+    document.addEventListener('mousemove',e=>{if(dragSlider) handleSliderPos(e);});
+    document.addEventListener('mouseup',()=>dragSlider=false);
+    strengthWrap.addEventListener('touchstart',e=>{dragSlider=true;handleSliderPos(e.touches[0]);});
+    document.addEventListener('touchmove',e=>{if(dragSlider) handleSliderPos(e.touches[0]);});
+    document.addEventListener('touchend',()=>dragSlider=false);
+    function handleSliderPos(evt){
+        const rect = strengthWrap.getBoundingClientRect();
+        let x = evt.clientX - rect.left;
+        let pct = x / rect.width;
+        let v = Math.round(1 + pct *9);
+        updateSliderUI(v);
+    }
+
+    //=====哈希开关toggle=====
+    const hashToggle = document.getElementById('hashToggle');
+    const hashSwitchInput = document.getElementById('hashSwitch');
+    const hashAlgoBox = document.getElementById('hashAlgoBox');
+    let hashToggleOn = false;
+    hashToggle.onclick = function(){
+        hashToggleOn = !hashToggleOn;
+        hashToggle.classList.toggle('active',hashToggleOn);
+        hashSwitchInput.value = hashToggleOn ? "1":"0";
+        if(hashToggleOn){
+            hashAlgoBox.classList.remove('opacity-50');
+        }else{
+            hashAlgoBox.classList.add('opacity-50');
+        }
+    };
+
+    //=====自定义复选框绑定=====
+    function bindCb(elId,inputId){
+        const el = document.getElementById(elId);
+        const inp = document.getElementById(inputId);
+        const icon = el.querySelector('.cb-icon');
+        el.onclick = function(){
+            const isChk = el.classList.contains('checked');
+            if(isChk){
+                el.classList.remove('checked');
+                icon.classList.add('hidden');
+                inp.value = "0";
+            }else{
+                el.classList.add('checked');
+                icon.classList.remove('hidden');
+                inp.value = "1";
+            }
+        }
+    }
+    bindCb("cbRmComment","rmComment");
+    bindCb("cbCompress","compressCode");
+    bindCb("cbVarObfs","varObfs");
+
+    //=====自定义下拉通用函数=====
+    function setupCustomSelect(wrapId,boxId,dropId,textSpanId,inputId){
+        const wrap = document.getElementById(wrapId);
+        const box = document.getElementById(boxId);
+        const drop = document.getElementById(dropId);
+        const txtSpan = document.getElementById(textSpanId);
+        const inp = document.getElementById(inputId);
+        box.onclick = function(e){
+            e.stopPropagation();
+            drop.classList.toggle('show');
+        };
+        document.addEventListener('click',()=>{ drop.classList.remove('show'); });
+        drop.querySelectorAll('.custom-select-item').forEach(item=>{
+            item.onclick = function(e){
+                e.stopPropagation();
+                const val = this.dataset.val;
+                txtSpan.innerText = this.innerText;
+                inp.value = val;
+                drop.classList.remove('show');
+            }
+        })
+    }
+    setupCustomSelect("langCustomSelect","langSelectBox","langDropdown","langText","langSelect");
+    setupCustomSelect("hashAlgoCustom","hashAlgoBox","hashAlgoDropdown","hashAlgoText","hashAlgo");
+
+    //=====主题=====
+    try {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        }
+    } catch (e) {}
+    themeToggle.onclick = function () {
+        html.classList.toggle('dark');
+        try { localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light'); } catch (e) {}
+    };
+
+    //polyfill
+    if (!String.prototype.replaceAll) {
+        String.prototype.replaceAll = function (search, replace) {
+            return this.replace(new RegExp(search, 'g'), replace);
+        };
+    }
+
+    const pwdInput = document.getElementById('pwdInput');
+    const hashOut = document.getElementById('hashOut');
+    const sourceInput = document.getElementById('sourceInput');
+    const encryptOutput = document.getElementById('encryptOutput');
+    const btnEncrypt = document.getElementById('btnEncrypt');
+    const btnDecrypt = document.getElementById('btnDecrypt');
+    const btnClear = document.getElementById('btnClear');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const copyResult = document.getElementById('copyResult');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    function randomObfName(len) {
+        len = len || 8;
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
+        let ret = "";
+        for (let i = 0; i < len; i++) {
+            ret += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return ret;
+    }
+
+    function removeComment(code, lang) {
+        if (lang === "sh") {
+            return code.replace(/^\s*#.*/gm, "");
+        } else {
+            code = code.replace(/\/\/.*/g, "");
+            code = code.replace(/\/\*[\s\S]*?\*\//g, "");
+            return code;
+        }
+    }
+
+    function simpleVarObfs(code, strength) {
+        const count = strength * 2;
+        const map = {};
+        for (let i = 0; i < count; i++) {
+            const old = "var_" + i;
+            map[old] = randomObfName(6 + Math.floor(Math.random() * 6));
+        }
+        Object.keys(map).forEach(function (k) {
+            code = code.replaceAll(k, map[k]);
+        });
+        return code;
+    }
+
+    function aesEncrypt(text, password) {
+        return CryptoJS.AES.encrypt(text, password).toString();
+    }
+
+    function aesDecrypt(cipher, password) {
+        try {
+            const bytes = CryptoJS.AES.decrypt(cipher, password);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        } catch (err) {
+            return "[解密失败：密码错误或密文损坏]";
+        }
+    }
+
+    function calcHash(text, algo) {
+        if (algo === "md5") {
+            return CryptoJS.MD5(text).toString();
+        } else {
+            return CryptoJS.SHA256(text).toString();
+        }
+    }
+
+    //加密按钮
+    btnEncrypt.onclick = function () {
+        const src = sourceInput.value;
+        if (!src || !src.trim()) {
+            alert("请输入需要加密的源代码");
+            return;
+        }
+        const strength = Number(strengthInput.value) || 5;
+        const lang = document.getElementById('langSelect').value;
+        let pass = pwdInput.value.trim();
+        if (!pass) pass = randomObfName(16);
+
+        const rmCommentVal = document.getElementById('rmComment').value === "1";
+        const compressVal = document.getElementById('compressCode').value === "1";
+        const varObfsVal = document.getElementById('varObfs').value === "1";
+
+        let proc = src;
+        if (rmCommentVal) proc = removeComment(proc, lang);
+        if (compressVal) {
+            proc = proc.replace(/\n+/g, "\n");
+            proc = proc.replace(/[ \t]+/g, " ");
+        }
+        if (varObfsVal) proc = simpleVarObfs(proc, strength);
+
+        let encText = proc;
+        const rounds = Math.ceil(strength / 2);
+        for (let i = 0; i < rounds; i++) {
+            encText = aesEncrypt(encText, pass + i);
+        }
+
+        let hashResult = null;
+        if (hashSwitchInput.value === "1") {
+            const halgo = document.getElementById('hashAlgo').value;
+            hashResult = calcHash(src, halgo);
+            hashOut.value = halgo.toUpperCase() + ": " + hashResult;
+        } else {
+            hashOut.value = "";
+        }
+
+        const outputObj = {
+            lang: lang,
+            strength: strength,
+            encryptRounds: rounds,
+            passwordHint: pass,
+            cipher: encText,
+            hash: hashResult,
+            hashAlgo: hashSwitchInput.value === "1" ? document.getElementById('hashAlgo').value : null
+        };
+        encryptOutput.value = JSON.stringify(outputObj, null, 2);
+    };
+
+    //解密按钮
+    btnDecrypt.onclick = function () {
+        const cipherText = encryptOutput.value;
+        const pass = pwdInput.value.trim();
+        if (!pass) {
+            alert("请填写加密密码");
+            return;
+        }
+        if (!cipherText || !cipherText.trim()) {
+            alert("输出区域没有密文数据");
+            return;
+        }
+        let obj;
+        try {
+            obj = JSON.parse(cipherText);
+        } catch (e) {
+            alert("解析失败，不是合法加密输出JSON");
+            return;
+        }
+        if (!obj || !obj.cipher) {
+            alert("密文缺失");
+            return;
+        }
+        let res = obj.cipher;
+        const rounds = Number(obj.encryptRounds) || 1;
+        for (let i = rounds - 1; i >= 0; i--) {
+            res = aesDecrypt(res, pass + i);
+        }
+        encryptOutput.value = res;
+    };
+
+    btnClear.onclick = function () {
+        sourceInput.value = "";
+        encryptOutput.value = "";
+        hashOut.value = "";
+    };
+
+    pasteBtn.onclick = async function () {
+        try {
+            const clipText = await navigator.clipboard.readText();
+            sourceInput.value = clipText;
+        } catch (err) {
+            alert("剪贴板访问被拒绝，请手动粘贴");
+        }
+    };
+
+    copyResult.onclick = async function () {
+        try {
+            await navigator.clipboard.writeText(encryptOutput.value);
+            alert("复制成功");
+        } catch (err) {
+            alert("复制失败，请手动复制");
+        }
+    };
+
+    downloadBtn.onclick = function () {
+        const content = encryptOutput.value;
+        if (!content.trim()) {
+            alert("没有内容可以下载");
+            return;
+        }
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "code_encrypt_" + Date.now() + ".txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+})();
+</script>
+</body>
+</html>
