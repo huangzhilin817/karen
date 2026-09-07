@@ -10,7 +10,7 @@ import "android.graphics.drawable.ColorDrawable"
 import "android.os.Build"
 import "android.view.animation.OvershootInterpolator"
 import "android.view.animation.DecelerateInterpolator"
-
+import "AndLua"
 local page1 = require "q1"
 local page2 = require "q2"
 local page3 = require "q3"
