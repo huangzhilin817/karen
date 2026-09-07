@@ -284,5 +284,5 @@ if isLogin ~= true then
   currentHighlightIndex = 1
 
   activity.setContentView(rootLayout)
-  closeLoading()  -- ← 在这里关闭加载弹窗
+  
 end
